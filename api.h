@@ -1,3 +1,12 @@
+typedef struct {
+    int occupied;
+    int size;
+    void *p;
+} Nodo_t;
+
+
+void *topoHeap;
+
 void iniciaAlocador();
 
 void finalizaAlocador();
