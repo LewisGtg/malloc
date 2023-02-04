@@ -7,10 +7,18 @@
 
 int main(int argc, char **argv)
 {
+    int *p;
     iniciaAlocador();
 
+    for (int i = 0; i < 4; ++i)
+    {
+        p = firstFitMalloc(1000);
+    }
 
-    alocaMem(0);
+    p = firstFitMalloc(40);
+    liberaMem(p);
+    p = firstFitMalloc(1);
 
+    imprimeHeap();
     return (0);
 }

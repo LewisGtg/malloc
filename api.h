@@ -5,12 +5,14 @@ typedef struct {
 } Nodo_t;
 
 
-void *topoHeap;
+void *inicioHeap;
 
 void iniciaAlocador();
 
 void finalizaAlocador();
 
-void *alocaMem(int num_bytes);
+void imprimeHeap();
+
+void * firstFitMalloc(int num_bytes);
 
 int liberaMem(void *bloco);
