@@ -8,4 +8,4 @@ main: $(API) main.c
 	gcc -g -Wall main.c $(API) -o main
 
 api.o: api.c api.h
-	gcc -c -Wall api.c
+	gcc -g -c -Wall api.c
