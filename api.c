@@ -1,15 +1,15 @@
 #include <stdio.h>
 #include <unistd.h>
 
-void * topoHeap = NULL; 
+void * heapBegin = NULL; 
 void * validAdress = NULL;
 
 void iniciaAlocador()
 {
     // Printf inicial para não ter problemas com endereço da heap
     printf("Iniciando alocador\n");
-    topoHeap = sbrk(0);
-    validAdress = topoHeap;
+    heapBegin = sbrk(0);
+    validAdress = heapBegin;
 }
 
 void finalizaAlocador()
@@ -19,12 +19,12 @@ void finalizaAlocador()
 
 void imprimeHeap()
 {
-    int *topoAtual = sbrk(0);
-    int *p = (int *)topoHeap;
+    int *currentTop = sbrk(0);
+    int *p = (int *)heapBegin;
 
-    while (p < topoAtual)
+    while (p < currentTop)
     {
-        // printf("p: %p\ntopoAtual: %p\n", p, topoAtual);
+        // printf("p: %p\ncurrentTop: %p\n", p, currentTop);
         printf("Bloco ocupado: %d\nTamanho Bloco: %d\n\n", *p, *(p + 1));
         p += (2 + *(p + 1));
     }
@@ -45,10 +45,64 @@ void setNext(void * block, int totalAllocated)
     }
 }
 
+void * bestFitMalloc(int num_bytes)
+{
+    int *currentTop = sbrk(0);
+    int *p = (int *)heapBegin;
+    int m = 1;
+    int bestFit = 0;
+    int *bestPlace = NULL;
+
+    while (num_bytes + 16 > 4096 * m)
+        m += 1;
+
+    int totalBytes = 4096 * m;
+
+    while (p < (int *) validAdress) 
+    {
+       if ( (*p == 0 && *(p+1) >= num_bytes && *(p+1) < bestFit) || (*p == 0 && *(p+1) >= num_bytes && bestFit == 0))
+       {
+            bestFit = *(p+1);
+            bestPlace = p;
+       }
+       p += (2 + *(p + 1));
+    }
+
+    // Não achou lugar
+    if (!bestPlace)
+    {
+        // Verifica se ainda há espaço válido na heap
+        if ((int *) validAdress + num_bytes + 2 < currentTop)
+        {
+            p = (int *) validAdress;
+            int oldValue = *(p + 1);
+            *p = 1;
+            *(p + 1) = num_bytes;
+            setNext(p, oldValue);
+        }
+        else
+        {
+            p = (int *) validAdress;
+
+            // Ajusta a brk
+            brk(p + totalBytes);
+            // Define as infos sobre o bloco requisitado e o bloco restante
+            *p = 1;
+            *(p + 1) = num_bytes;
+            setNext(p, totalBytes);
+        }
+
+        return p+2;
+    }
+
+    *bestPlace = 1;
+    return bestPlace + 2;
+}
+
 void *firstFitMalloc(int num_bytes)
 {
-    int *topoAtual = sbrk(0);
-    int *p = (int *)topoHeap;
+    int *currentTop = sbrk(0);
+    int *p = (int *)heapBegin;
     int m = 1;
 
     while (num_bytes + 16 > 4096 * m)
@@ -57,7 +111,7 @@ void *firstFitMalloc(int num_bytes)
     int totalBytes = 4096 * m;
 
     // Nenhuma memória foi alocada ainda, ou falta memória
-    if ((int *) validAdress + num_bytes + 2>= topoAtual)
+    if ((int *)validAdress + num_bytes + 2 >= currentTop)
     {
         p = validAdress;
 
@@ -65,37 +119,37 @@ void *firstFitMalloc(int num_bytes)
         brk(p + totalBytes);
         // Define as infos sobre o bloco requisitado e o bloco restante
         *p = 1;
-        *(p+1) = num_bytes;
+        *(p + 1) = num_bytes;
         setNext(p, totalBytes);
     }
     else
     {
-        while (p < topoAtual)
+        while (p < currentTop)
         {
             // Encontrou bloco livre
-            if (*p == 0 && *(p+1) >= num_bytes)
+            if (*p == 0 && *(p + 1) >= num_bytes)
             {
                 *p = 1;
 
                 // Memória que ainda não foi utilizada
-                if ((int *) validAdress <= p)
+                if ((int *)validAdress <= p)
                 {
-                    int oldValue = *(p+1);
-                    *(p+1) = num_bytes;
+                    int oldValue = *(p + 1);
+                    *(p + 1) = num_bytes;
                     setNext(p, oldValue);
                 }
                 return p + 2;
             }
-            p += (2 + *(p+1));
+            p += (2 + *(p + 1));
         }
     }
 
     return p + 2;
 }
 
-int liberaMem(void * bloco)
+int liberaMem(void *bloco)
 {
-    int *p = (int *) bloco;
-    *(p-2) = 0;
+    int *p = (int *)bloco;
+    *(p - 2) = 0;
     return 0;
 }
