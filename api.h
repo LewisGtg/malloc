@@ -15,4 +15,6 @@ void imprimeHeap();
 
 void * firstFitMalloc(int num_bytes);
 
+void * bestFitMalloc(int num_bytes);
+
 int liberaMem(void *bloco);
