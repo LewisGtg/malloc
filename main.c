@@ -7,10 +7,17 @@
 
 int main(int argc, char **argv)
 {
+    void * a;
     iniciaAlocador();
 
-
-    alocaMem(0);
-
+    for (int i = 0; i < 100; ++i)
+    {
+        a = firstFitMalloc(100);
+        strcpy(a, "TESTE");
+        printf("%p %s\n", a, (char *) a);
+        liberaMem(a);
+    }
+    
+    // imprimeHeap();
     return (0);
 }

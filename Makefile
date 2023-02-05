@@ -5,7 +5,7 @@ run:
 	ld malloc.o -o malloc
 
 main: $(API) main.c
-	gcc -Wall main.c $(API) -o main
+	gcc -g -Wall main.c $(API) -o main
 
 api.o: api.c api.h
-	gcc -c -Wall api.c
+	gcc -g -c -Wall api.c
