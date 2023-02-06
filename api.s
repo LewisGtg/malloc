@@ -1,4 +1,14 @@
 .section .data
+    heapBegin: .quad 0
+    validAddress: .quad 0   
 .section .text
-.global _start
+iniciaAlocador:
+
+setNext:
+
+bestFitMalloc:
+
+firstFitMalloc:
+
+liberaMem:
 
