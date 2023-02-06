@@ -110,6 +110,25 @@ void *firstFitMalloc(int num_bytes)
 
     int totalBytes = 4096 * m;
 
+    while (p < (int*) validAdress)
+    {
+        // Encontrou bloco livre
+        if (*p == 0 && *(p + 1) >= num_bytes)
+        {
+            *p = 1;
+
+            // Memória que ainda não foi utilizada
+            if ((int *)validAdress <= p)
+            {
+                int oldValue = *(p + 1);
+                *(p + 1) = num_bytes;
+                setNext(p, oldValue);
+            }
+            return p + 2;
+        }
+        p += (2 + *(p + 1));
+    }
+
     // Nenhuma memória foi alocada ainda, ou falta memória
     if ((int *)validAdress + num_bytes + 2 >= currentTop)
     {
@@ -124,24 +143,11 @@ void *firstFitMalloc(int num_bytes)
     }
     else
     {
-        while (p < currentTop)
-        {
-            // Encontrou bloco livre
-            if (*p == 0 && *(p + 1) >= num_bytes)
-            {
-                *p = 1;
-
-                // Memória que ainda não foi utilizada
-                if ((int *)validAdress <= p)
-                {
-                    int oldValue = *(p + 1);
-                    *(p + 1) = num_bytes;
-                    setNext(p, oldValue);
-                }
-                return p + 2;
-            }
-            p += (2 + *(p + 1));
-        }
+        p = (int *) validAdress;
+        int oldValue = *(p + 1);
+        *p = 1;
+        *(p + 1) = num_bytes;
+        setNext(p, oldValue);
     }
 
     return p + 2;
