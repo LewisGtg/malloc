@@ -1,8 +1,8 @@
 API = api.o
 
 run:
-	as malloc.s -o malloc.o
-	ld malloc.o -o malloc
+	as -g api.s -o apiAs.o
+	ld -g apiAs.o -o api
 
 main: $(API) main.c
 	gcc -g -Wall main.c $(API) -o main
