@@ -2,7 +2,6 @@
     heapBegin: .quad 0
     validAddress: .quad 0   
 .section .text
-.globl _start
 iniciaAlocador:
     # Chamar printf
     pushq %rbp
@@ -31,9 +30,8 @@ setNext:
     addq $8, %rbx
     movq %rbx, -24(%rbp)
 
-    # rcx = blockBegin + blockSize
-    movq %rbx, %rcx
-    addq %rax, %rcx
+    # rbx = blockBegin + blockSize
+    addq %rax, %rbx
 
     # Chama a brk 
     movq $0, %rdi
@@ -44,21 +42,21 @@ setNext:
     movq %rax, -8(%rbp)
 
     # "if"
-    cmp %rcx, validAddress
+    cmp validAddress, %rbx 
     jl sn_fim_if
-    cmp %rcx, heapBegin
+    cmp %rbx, heapBegin
     jge sn_fim_if
 
     # *(blockBegin + blockSize) = 0 
-    movq $0, (%rcx)
+    movq $0, (%rbx)
 
     # validAddress = blockBegin + blockSize
-    movq %rcx, validAddress
+    movq %rbx, validAddress
     
     # *(blockBegin + blockSize + 1) = totalAllocated - blockSize;
-    addq $1, %rcx
-    subq %rax, %rsi
-    movq %rsi, (%rcx)
+    addq $8, %rbx
+    subq -16(%rbp), %rsi
+    movq %rsi, (%rbx)
 
     sn_fim_if:
     addq $24, %rsp
@@ -77,7 +75,8 @@ firstFitMalloc:
 
     subq $40, %rsp
 
-    movq %rdi, %rdx # salva parametro (num_bytes) em rdx
+    # salva parametro (num_bytes) em rdx
+    movq %rdi, %rdx
 
     # Chama a brk - currentTop = sbrk(0)
     movq $0, %rdi
@@ -102,15 +101,17 @@ firstFitMalloc:
     movq %rcx, %rbx
     ffm_while_m:
     imul $4096, %rbx
-    cmp %rax, %rbx
+    cmp %rbx, %rax
     jle ffm_fim_while_m
     addq $1, %rcx
     movq %rcx, %rbx
     jmp ffm_while_m
     ffm_fim_while_m:
-    movq %rbx, -32(%rbp) # totalBytes = 4096*m
+    # totalBytes = 4096*m
+    movq %rbx, -32(%rbp)
     
-    movq -16(%rbp), %rax # rax = p
+    # rax = p
+    movq -16(%rbp), %rax 
 
     # p < (int*) validAdress
     ffm_while_va:
@@ -154,10 +155,49 @@ firstFitMalloc:
     movq %rax, -16(%rbp)
 
     # TODO: Nenhuma memória foi alocada ainda, ou falta memória
+
+    # # if ((int *)validAdress + num_bytes + 2 >= currentTop)
+    movq %rdx, %rcx
+    addq $16, %rcx
+    addq validAddress, %rcx
+
+    # p = validAddress 
+    movq validAddress, %rbx
+    movq %rbx, %rdi
+    movq %rbx, -16(%rbp) 
+
+    cmp -8(%rbp), %rcx
+    jl ffm_else
+
+    # p + totalBytes
+    addq -32(%rbp), %rdi 
+    movq $12, %rax
+    # brk(p + totalBytes)
+    syscall 
+
+    movq -16(%rbp), %rdi
+    movq -32(%rbp), %rsi
+    jmp ffm_set_heap
+
+    ffm_else:
+    # setNext(p, oldValue)
+    movq %rbx, %r9
+    addq $8, %r9
+    movq (%r9), %r8 
+    movq %r8, %rsi
+
+    ffm_set_heap:
+    # *p = 1 
+    # *(p + 1) = num_bytes
+    movq $1, (%rbx)
+    addq $8, %rbx
+    movq %rdx, (%rbx)
+
+    call setNext
     
     ffm_ret:
     movq -16(%rbp), %rax
-    addq  $16, %rax
+    addq $16, %rax
     addq $40, %rsp
     popq %rbp
     ret
@@ -168,12 +208,11 @@ liberaMem:
     popq %rbp
     ret
 
-_start:
+aaaaa:
     pushq %rbp
     movq %rsp, %rbp
     call iniciaAlocador
-    movq validAddress, %rdi
-    movq $100, %rsi
-    call setNext
+    movq $100, %rdi
+    call firstFitMalloc
     movq $60, %rax
     syscall

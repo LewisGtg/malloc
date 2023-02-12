@@ -2,3 +2,5 @@
 *.o
 *.out
 main
+malloc
+malloc_c
