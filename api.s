@@ -2,6 +2,7 @@
     heapBegin: .quad 0
     validAddress: .quad 0   
 .section .text
+.globl _start
 iniciaAlocador:
     # Chamar printf
     pushq %rbp
@@ -208,10 +209,14 @@ liberaMem:
     popq %rbp
     ret
 
-aaaaa:
+_start:
     pushq %rbp
     movq %rsp, %rbp
     call iniciaAlocador
+    movq $100, %rdi
+    call firstFitMalloc
+    movq $100, %rdi
+    call firstFitMalloc
     movq $100, %rdi
     call firstFitMalloc
     movq $60, %rax
