@@ -175,6 +175,61 @@ void *firstFitMalloc(int num_bytes)
     return p + 2;
 }
 
+void *worstFitMalloc(int num_bytes)
+{
+    int *currentTop = sbrk(0);
+    int *p = (int *)heapBegin;
+    int m = 1;
+    int worstFit = 0;
+    int *worstPlace = NULL;
+
+    while (num_bytes + 16 > 4096 * m)
+        m += 1;
+
+    int totalBytes = 4096 * m;
+
+    while (p < (int *)validAdress)
+    {
+        int fits = *p == 0 && *(p + 1) >= num_bytes;
+        if (fits && (*(p + 1) > worstFit || worstFit == 0))
+        {
+            worstFit = *(p + 1);
+            worstPlace = p;
+        }
+        p += (2 + *(p + 1));
+    }
+
+    // Não achou lugar
+    if (!worstPlace)
+    {
+        // Verifica se ainda há espaço válido na heap
+        if ((int *)validAdress + num_bytes + 2 < currentTop)
+        {
+            p = (int *)validAdress;
+            int oldValue = *(p + 1);
+            *p = 1;
+            *(p + 1) = num_bytes;
+            setNext(p, oldValue);
+        }
+        else
+        {
+            p = (int *)validAdress;
+
+            // Ajusta a brk
+            brk(p + totalBytes);
+            // Define as infos sobre o bloco requisitado e o bloco restante
+            *p = 1;
+            *(p + 1) = num_bytes;
+            setNext(p, totalBytes);
+        }
+
+        return p + 2;
+    }
+
+    *worstPlace = 1;
+    return worstPlace + 2;
+}
+
 int liberaMem(void *bloco)
 {
     int *p = (int *)bloco;

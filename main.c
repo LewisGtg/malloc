@@ -12,12 +12,15 @@ int main(int argc, char **argv)
     iniciaAlocador();
 
     a = firstFitMalloc(100);
-    b = firstFitMalloc(200);
-    imprimeMapa();
+    b = firstFitMalloc(300);
+    a = firstFitMalloc(200);
+    liberaMem(b);
     liberaMem(a);
     imprimeMapa();
-    liberaMem(b);
+    b = worstFitMalloc(50);
     imprimeMapa();
+    liberaMem(b);
+    // imprimeMapa();
 
     // imprimeHeap();
     return (0);
