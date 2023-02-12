@@ -55,7 +55,7 @@ imprimeMapa:
     jmp im_while
 
     im_fim_while:
-
+    addq $16, %rsp
     popq %rbp
     ret
 
@@ -111,6 +111,160 @@ setNext:
 bestFitMalloc:
     pushq %rbp
     movq %rsp, %rbp
+    subq $48, %rsp
+
+    # salva parametro (num_bytes) em rdx
+    movq %rdi, %rdx
+
+    # Chama a brk - currentTop = sbrk(0)
+    movq $0, %rdi
+    movq $12, %rax
+    syscall
+    movq %rax, -8(%rbp)
+
+    # *p = heapBegin
+    movq heapBegin, %rbx
+    movq %rbx, -16(%rbp)
+
+    # m = 1
+    movq $1, -24(%rbp)
+
+    # bestFit = 0
+    movq $0, -32(%rbp)
+
+    # bestPlace = NULL
+    movq $0, -40(%rbp)
+
+    # %rax = num_bytes + 16
+    movq %rdx, %rax
+    addq $16, %rax
+
+    # %rbx = 4096 * m
+    # while (rax > rbx) ...
+    movq -24(%rbp), %rcx
+    movq %rcx, %rbx
+    bfm_while_m:
+    imul $4096, %rbx
+    cmp %rbx, %rax
+    jle bfm_fim_while_m
+    addq $1, %rcx
+    movq %rcx, %rbx
+    jmp bfm_while_m
+    bfm_fim_while_m:
+    # totalBytes = 4096*m
+    movq %rbx, -48(%rbp)
+
+    movq -16(%rbp), %rax
+
+    # while p < validAddress
+    bfm_while_p:
+    cmp %rax, validAddress
+    jge bfm_fim_while_p
+
+    # Sequência de if's
+
+    # *p == 0
+    cmp $0, (%rax)
+    jne bfm_or_if_fit
+
+    # *(p + 1)>= num_bytes
+    movq %rax, %rbx
+    addq $8, %rbx
+    cmp (%rbx), %rdx
+    jl bfm_or_if_fit
+
+    # *(p + 1) < bestFit
+    movq -32(%rbp), %rcx
+    cmp (%rbx), %rcx
+    jge bfm_or_if_fit
+
+    # Todas condições foram satisfeitas
+    jmp bfm_true_if_fit
+
+    # Segunda parte do if (or)
+    bfm_or_if_fit:
+    # *p == 0
+    cmp $0, (%rax)
+    jne bfm_fim_if_fit
+
+    # *(p + 1)>= num_bytes
+    cmp (%rbx), %rdx
+    jl bfm_fim_if_fit
+
+    # bestFit == 0
+    cmp $0, %rcx
+    jne bfm_fim_if_fit
+
+    bfm_true_if_fit:
+    movq (%rbx), %rcx
+    
+    # bestFit = *(p + 1) 
+    movq %rcx, -32(%rbp) 
+
+    # bestPlace = p
+    movq %rax, -40(%rbp)
+
+    bfm_fim_if_fit:
+
+    # p += (2 + *(p + 1))
+    movq (%rbx), %rbx
+    addq $16, %rbx
+    addq %rbx, %rax
+    movq %rax, -16(%rbp)
+
+    bfm_fim_while_p:
+
+    cmp $0, -40(%rbp)
+    jne bfm_fim_if_bp
+
+    # rcx = validAddress + num_bytes + 2
+    movq %rdx, %rcx
+    addq $16, %rcx
+    addq validAddress, %rcx
+
+    # p = validAddress 
+    movq validAddress, %rbx
+    movq %rbx, %rdi
+    movq %rbx, -16(%rbp) 
+
+    cmp -8(%rbp), %rcx
+    jge bfm_else_bp
+
+    # oldValue = *(p + 1)
+    movq %rbx, %r9
+    addq $8, %r9
+    movq (%r9), %r8 
+    movq %r8, %rsi
+
+    jmp bfm_set_heap
+
+    bfm_else_bp:
+    addq -48(%rbp), %rdi 
+    movq $12, %rax
+    # brk(p + totalBytes)
+    syscall 
+
+    movq -16(%rbp), %rdi
+    movq -48(%rbp), %rsi
+
+    bfm_set_heap:
+    # *p = 1 
+    # *(p + 1) = num_bytes
+    movq $1, (%rbx)
+    addq $8, %rbx
+    movq %rdx, (%rbx)
+
+    call setNext
+    movq -16(%rbp), %rax
+    jmp bfm_ret
+
+    bfm_fim_if_bp:
+    movq -40(%rbp), %rax
+    movq $1, (%rax)
+
+    bfm_ret:
+    addq $16, %rax
+    addq $48, %rsp
     popq %rbp
     ret
 
@@ -250,23 +404,38 @@ firstFitMalloc:
 liberaMem:
     pushq %rbp
     movq %rsp, %rbp
+
+    subq $16, %rdi
+    movq $0, (%rdi)
+
     popq %rbp
     ret
 
 main:
     pushq %rbp
     movq %rsp, %rbp
+    subq $16, %rsp
 
     mov $strHash, %rdi
     call printf
 
     call iniciaAlocador
+
     movq $100, %rdi
     call firstFitMalloc
+
+    movq $500, %rdi
+    call firstFitMalloc
+    movq %rax, %rdi
+    call liberaMem
+
     movq $200, %rdi
     call firstFitMalloc
+
     call imprimeMapa
     # movq $100, %rdi
     # call firstFitMalloc
+    addq $16, %rsp
+    popq %rbp
     movq $60, %rax
     syscall
