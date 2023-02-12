@@ -39,8 +39,7 @@ void imprimeMapa()
     {
         int filledBlock = *p;
         int blockSize = *(p + 1);
-        for (int i = 0; i < 16; i++)
-            putchar('#');
+        printf("################");
         char blockChar = ' ';
         if (filledBlock != 0)
             blockChar = '-';

@@ -1,10 +1,13 @@
 .section .data
     heapBegin: .quad 0
-    validAddress: .quad 0   
+    validAddress: .quad 0
+    strMapa: .string "\nmapa:\n"
+    strHash: .string "################\n"
+    strNull: .string "*"
+    strIm: .string "Bloco ocupado: %d\nTamanho Bloco: %d\n\n"
 .section .text
-.globl _start
+.globl main
 iniciaAlocador:
-    # Chamar printf
     pushq %rbp
     movq %rsp, %rbp
     movq $0, %rdi
@@ -12,6 +15,47 @@ iniciaAlocador:
     syscall
     movq %rax, heapBegin
     movq %rax, validAddress
+    popq %rbp
+    ret
+
+imprimeMapa:
+    pushq %rbp
+    movq %rsp, %rbp
+
+    subq $16, %rsp
+
+    # Chama a brk
+    movq $0, %rdi
+    movq $12, %rax
+    syscall
+
+    movq heapBegin, %rbx # rbx = p = heapBegin
+    movq %rbx, -8(%rbp)
+    movq %rax, -16(%rbp) # rax = sbrk(0)
+
+    im_while:
+    cmp -16(%rbp), %rbx
+    jge im_fim_while
+    mov $strIm, %rdi
+    
+    mov (%rbx), %rsi
+
+    movq %rbx, %rdx
+    addq $8, %rdx
+    mov (%rdx), %rdx
+    call printf
+
+    movq -8(%rbp), %rbx
+    movq %rbx, %rdx
+    addq $8, %rdx
+    movq (%rdx), %rdx
+    addq $16, %rdx
+    addq %rdx, %rbx
+    movq %rbx, -8(%rbp) 
+    jmp im_while
+
+    im_fim_while:
+
     popq %rbp
     ret
 
@@ -148,7 +192,7 @@ firstFitMalloc:
 
     ffm_fim_if_0:
     movq (%rbx), %rbx
-    addq $2, %rbx
+    addq $16, %rbx
     addq %rbx, %rax
     jmp ffm_while_va
 
@@ -209,15 +253,20 @@ liberaMem:
     popq %rbp
     ret
 
-_start:
+main:
     pushq %rbp
     movq %rsp, %rbp
+
+    mov $strHash, %rdi
+    call printf
+
     call iniciaAlocador
     movq $100, %rdi
     call firstFitMalloc
-    movq $100, %rdi
+    movq $200, %rdi
     call firstFitMalloc
-    movq $100, %rdi
-    call firstFitMalloc
+    call imprimeMapa
+    # movq $100, %rdi
+    # call firstFitMalloc
     movq $60, %rax
     syscall
