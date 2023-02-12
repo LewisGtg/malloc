@@ -1,9 +1,9 @@
-typedef struct {
+typedef struct
+{
     int occupied;
     int size;
     void *p;
 } Nodo_t;
-
 
 void *inicioHeap;
 
@@ -13,8 +13,10 @@ void finalizaAlocador();
 
 void imprimeHeap();
 
-void * firstFitMalloc(int num_bytes);
+void imprimeMapa();
 
-void * bestFitMalloc(int num_bytes);
+void *firstFitMalloc(int num_bytes);
+
+void *bestFitMalloc(int num_bytes);
 
 int liberaMem(void *bloco);

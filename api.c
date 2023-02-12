@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-void * heapBegin = NULL; 
-void * validAdress = NULL;
+void *heapBegin = NULL;
+void *validAdress = NULL;
 
 void iniciaAlocador()
 {
@@ -30,14 +30,36 @@ void imprimeHeap()
     }
 }
 
-void setNext(void * block, int totalAllocated) 
+void imprimeMapa()
 {
-    void * heapTop = sbrk(0);
-    int * p = (int *) block;
-    int blockSize = *(p + 1);
-    int * blockBegin = p + 2;
+    int *currentTop = sbrk(0);
+    int *p = (int *)heapBegin;
+    printf("\nmapa:\n");
+    while (p < currentTop)
+    {
+        int filledBlock = *p;
+        int blockSize = *(p + 1);
+        for (int i = 0; i < 16; i++)
+            putchar('#');
+        char blockChar = ' ';
+        if (filledBlock != 0)
+            blockChar = '-';
+        else
+            blockChar = '*';
+        for (int i = 0; i < blockSize; i++)
+            putchar(blockChar);
+        p += (2 + blockSize);
+    }
+}
 
-    if (blockBegin + blockSize >= (int *) validAdress && blockBegin + blockSize < (int *) heapTop) 
+void setNext(void *block, int totalAllocated)
+{
+    void *heapTop = sbrk(0);
+    int *p = (int *)block;
+    int blockSize = *(p + 1);
+    int *blockBegin = p + 2;
+
+    if (blockBegin + blockSize >= (int *)validAdress && blockBegin + blockSize < (int *)heapTop)
     {
         *(blockBegin + blockSize) = 0;
         *(blockBegin + blockSize + 1) = totalAllocated - blockSize;
@@ -45,7 +67,7 @@ void setNext(void * block, int totalAllocated)
     }
 }
 
-void * bestFitMalloc(int num_bytes)
+void *bestFitMalloc(int num_bytes)
 {
     int *currentTop = sbrk(0);
     int *p = (int *)heapBegin;
@@ -58,23 +80,23 @@ void * bestFitMalloc(int num_bytes)
 
     int totalBytes = 4096 * m;
 
-    while (p < (int *) validAdress) 
+    while (p < (int *)validAdress)
     {
-       if ( (*p == 0 && *(p+1) >= num_bytes && *(p+1) < bestFit) || (*p == 0 && *(p+1) >= num_bytes && bestFit == 0))
-       {
-            bestFit = *(p+1);
+        if ((*p == 0 && *(p + 1) >= num_bytes && *(p + 1) < bestFit) || (*p == 0 && *(p + 1) >= num_bytes && bestFit == 0))
+        {
+            bestFit = *(p + 1);
             bestPlace = p;
-       }
-       p += (2 + *(p + 1));
+        }
+        p += (2 + *(p + 1));
     }
 
     // Não achou lugar
     if (!bestPlace)
     {
         // Verifica se ainda há espaço válido na heap
-        if ((int *) validAdress + num_bytes + 2 < currentTop)
+        if ((int *)validAdress + num_bytes + 2 < currentTop)
         {
-            p = (int *) validAdress;
+            p = (int *)validAdress;
             int oldValue = *(p + 1);
             *p = 1;
             *(p + 1) = num_bytes;
@@ -82,7 +104,7 @@ void * bestFitMalloc(int num_bytes)
         }
         else
         {
-            p = (int *) validAdress;
+            p = (int *)validAdress;
 
             // Ajusta a brk
             brk(p + totalBytes);
@@ -92,7 +114,7 @@ void * bestFitMalloc(int num_bytes)
             setNext(p, totalBytes);
         }
 
-        return p+2;
+        return p + 2;
     }
 
     *bestPlace = 1;
@@ -110,7 +132,7 @@ void *firstFitMalloc(int num_bytes)
 
     int totalBytes = 4096 * m;
 
-    while (p < (int*) validAdress)
+    while (p < (int *)validAdress)
     {
         // Encontrou bloco livre
         if (*p == 0 && *(p + 1) >= num_bytes)
@@ -143,7 +165,7 @@ void *firstFitMalloc(int num_bytes)
     }
     else
     {
-        p = (int *) validAdress;
+        p = (int *)validAdress;
         int oldValue = *(p + 1);
         *p = 1;
         *(p + 1) = num_bytes;
