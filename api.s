@@ -314,7 +314,7 @@ firstFitMalloc:
 
     # p < (int*) validAdress
     ffm_while_va:
-    cmp %rax, validAddress
+    cmp validAddress, %rax
     jge ffm_fim_while_va
     
     # (if *p == 0 && *(p + 1) >= num_bytes)
@@ -323,13 +323,13 @@ firstFitMalloc:
     jne ffm_fim_if_0
     movq %rax, %rbx
     addq $8, %rbx
-    cmp (%rbx), %rdx
+    cmp %rdx, (%rbx)
     jl ffm_fim_if_0
 
     movq $1, (%rax)
 
     # (if ((int *)validAdress <= p))
-    cmp validAddress, %rax
+    cmp %rax, validAddress
     jg ffm_fim_if_1
 
     movq (%rbx), %r8
@@ -345,9 +345,12 @@ firstFitMalloc:
     jmp ffm_ret
 
     ffm_fim_if_0:
+    movq -16(%rbp), %rbx
+    addq $8, %rbx
     movq (%rbx), %rbx
     addq $16, %rbx
     addq %rbx, %rax
+    movq %rax, -16(%rbp)
     jmp ffm_while_va
 
     ffm_fim_while_va:
@@ -422,15 +425,15 @@ main:
     call iniciaAlocador
 
     movq $100, %rdi
-    call firstFitMalloc
+    call bestFitMalloc
 
     movq $500, %rdi
-    call firstFitMalloc
+    call bestFitMalloc
     movq %rax, %rdi
     call liberaMem
 
     movq $200, %rdi
-    call firstFitMalloc
+    call bestFitMalloc
 
     call imprimeMapa
     # movq $100, %rdi
