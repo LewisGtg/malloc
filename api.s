@@ -158,7 +158,7 @@ bestFitMalloc:
 
     # while p < validAddress
     bfm_while_p:
-    cmp %rax, validAddress
+    cmp validAddress, %rax
     jge bfm_fim_while_p
 
     # Sequência de if's
@@ -170,12 +170,12 @@ bestFitMalloc:
     # *(p + 1)>= num_bytes
     movq %rax, %rbx
     addq $8, %rbx
-    cmp (%rbx), %rdx
+    cmp %rdx, (%rbx)
     jl bfm_or_if_fit
 
     # *(p + 1) < bestFit
     movq -32(%rbp), %rcx
-    cmp (%rbx), %rcx
+    cmp %rcx, (%rbx) # inverte para WF
     jge bfm_or_if_fit
 
     # Todas condições foram satisfeitas
@@ -188,7 +188,7 @@ bestFitMalloc:
     jne bfm_fim_if_fit
 
     # *(p + 1)>= num_bytes
-    cmp (%rbx), %rdx
+    cmp %rdx, (%rbx)
     jl bfm_fim_if_fit
 
     # bestFit == 0
@@ -207,10 +207,14 @@ bestFitMalloc:
     bfm_fim_if_fit:
 
     # p += (2 + *(p + 1))
+    movq -16(%rbp), %rbx
+    addq $8, %rbx
     movq (%rbx), %rbx
     addq $16, %rbx
     addq %rbx, %rax
     movq %rax, -16(%rbp)
+
+    jmp bfm_while_p
 
     bfm_fim_while_p:
 
@@ -429,7 +433,16 @@ main:
 
     movq $500, %rdi
     call bestFitMalloc
+
+    movq %rax, -8(%rbp)    
+
+    movq $300, %rdi
+    call bestFitMalloc
+
     movq %rax, %rdi
+    call liberaMem
+
+    movq -8(%rbp), %rdi
     call liberaMem
 
     movq $200, %rdi
