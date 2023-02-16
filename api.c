@@ -185,6 +185,14 @@ void *bestFitMalloc(int num_bytes)
         return p + 2;
     }
 
+    // achou
+    if (num_bytes < bestFit + 16)
+    {
+        *(bestPlace + 1) = num_bytes;
+        *(bestPlace + num_bytes + 2) = 0;
+        *(bestPlace + num_bytes + 3) = bestFit - 2 - num_bytes;
+    }
+
     *bestPlace = 1;
     return bestPlace + 2;
 }

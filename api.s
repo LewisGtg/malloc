@@ -305,6 +305,36 @@ bestFitMalloc:
     jmp bfm_ret
 
     bfm_fim_if_bp:
+# 
+# 
+    # movq -32(%rbp), %rax
+    # movq %rax, %rbx
+    # addq $16, %rbx
+# 
+    # cmp %rdx, %rbx
+    # jge blocoPequeno
+# 
+    # # *(bestPlace + 1) = num_bytes;
+    # movq %rax, %rbx
+    # addq $8, %rbx
+    # movq %rbx, -8(%rbp) # -8(%rbp) = bestFit
+    # movq %rdx, (%rbx)
+# 
+    # # *(bestPlace + num_bytes + 2) = 0;
+    # addq %rdx, %rbx
+    # addq $16, %rbx
+    # movq $0, (%rbx)
+# 
+    # # *(bestPlace + num_bytes + 3) = bestFit - 2 - num_bytes;
+    # addq $8, %rbx
+    # movq %rax, %rcx
+    # movq (%rcx), %rcx
+    # subq $2, %rcx
+    # movq -8(%rbp), %rdx
+    # subq %rcx, %rdx
+    # movq %rdx, (%rbx)
+
+    blocoPequeno:
     movq -40(%rbp), %rax
     movq $1, (%rax)
 
