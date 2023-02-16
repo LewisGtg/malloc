@@ -2,9 +2,11 @@
     heapBegin: .quad 0
     validAddress: .quad 0
     strMapa: .string "\nmapa:\n"
-    strHash: .string "################\n"
+    strHash: .string "################"
+    strOcupado: .string "-"
+    strFree: .string "+"
     strNull: .string "*"
-    strIm: .string "Bloco ocupado: %d\nTamanho Bloco: %d\n\n"
+    strFim: .string "\n\n"
 .section .text
 .globl main
 iniciaAlocador:
@@ -19,45 +21,80 @@ iniciaAlocador:
     ret
 
 imprimeMapa:
-    pushq %rbp
-    movq %rsp, %rbp
+    pushq %rbp                                  
+    movq %rsp, %rbp                             
+    subq $32, %rsp                              
+    movq heapBegin, %r8                        
+    movq %r8, -8(%rbp)                          
+    print_while:
+    movq $0, -32(%rbp)                          
 
-    subq $16, %rsp
+    movq $12, %rax                              
+    movq $0, %rdi                               
+    syscall                                     
 
-    # Chama a brk
-    movq $0, %rdi
-    movq $12, %rax
-    syscall
+    movq %rax, %rcx                             
+    movq -8(%rbp), %r8                          
 
-    movq heapBegin, %rbx # rbx = p = heapBegin
-    movq %rbx, -8(%rbp)
-    movq %rax, -16(%rbp) # rax = sbrk(0)
+    cmpq %rcx, %r8                              
+    jge end_print_while                         
 
-    im_while:
-    cmp -16(%rbp), %rbx
-    jge im_fim_while
-    mov $strIm, %rdi
+    movq $0, %rdx                               
+    cmpq %rdx, (%r8)                            
+    jg else_print_free_if                       
+    movq $1, -16(%rbp)                          
+    jmp exit_print_free_if                      
+    else_print_free_if:
+    movq $0, -16(%rbp)                          
+    exit_print_free_if:
+    movq $strHash, %rdi                   
+    call printf                                 
+
+    movq -8(%rbp), %r8                          
+
+    addq $8, %r8                                
+    movq (%r8), %r10                            
+    movq %r10, -24(%rbp)                        
+
+    addq $8, %r8                                
+    movq %r8, -8(%rbp)                          
+    print_for:
+    movq -32(%rbp), %r11                        
+    movq -24(%rbp), %r10                        
+    cmpq %r10, %r11                             
+    jge end_print_for                           
+
+    movq -16(%rbp), %r9                         
+    movq $1, %rcx                               
+    cmpq %r9, %rcx                              
+    je else_char_select                         
+    movq $strOcupado, %rdi                    
+    jmp exit_char_select                        
+    else_char_select:
+    movq $strFree, %rdi                       
+    exit_char_select:
+    call printf                                 
+
+    movq -32(%rbp), %r11                        
+    addq $1, %r11                               
+    movq %r11, -32(%rbp)                        
     
-    mov (%rbx), %rsi
+    jmp print_for                               
+    end_print_for:
+    movq -24(%rbp), %r10                        
+    movq -8(%rbp), %r8                          
+    
+    addq %r10, %r8                              
+    movq %r8, -8(%rbp)                          
+    jmp print_while                             
+    end_print_while:
+    movq $strNull, %rdi                              
+    call printf                                 
 
-    movq %rbx, %rdx
-    addq $8, %rdx
-    mov (%rdx), %rdx
-    call printf
+    addq $32, %rsp                              
+    popq %rbp                                   
+    ret                                         
 
-    movq -8(%rbp), %rbx
-    movq %rbx, %rdx
-    addq $8, %rdx
-    movq (%rdx), %rdx
-    addq $16, %rdx
-    addq %rdx, %rbx
-    movq %rbx, -8(%rbp) 
-    jmp im_while
-
-    im_fim_while:
-    addq $16, %rsp
-    popq %rbp
-    ret
 
 setNext:
     # Arruma a pilha e aloca variáveis
@@ -423,7 +460,7 @@ main:
     movq %rsp, %rbp
     subq $16, %rsp
 
-    mov $strHash, %rdi
+    mov $strMapa, %rdi
     call printf
 
     call iniciaAlocador
@@ -449,8 +486,10 @@ main:
     call bestFitMalloc
 
     call imprimeMapa
-    # movq $100, %rdi
-    # call firstFitMalloc
+
+    mov $strFim, %rdi
+    call printf
+
     addq $16, %rsp
     popq %rbp
     movq $60, %rax
