@@ -46,7 +46,7 @@ void imprimeMapa()
         if (filledBlock != 0)
             blockChar = '-';
         else
-            blockChar = '*';
+            blockChar = '+';
         for (int i = 0; i < blockSize; i++)
             putchar(blockChar);
         p += (2 + blockSize);
@@ -302,5 +302,25 @@ int liberaMem(void *bloco)
 {
     int *p = (int *)bloco;
     *(p - 2) = 0;
+    return 0;
+}
+
+int bestliberaMem(void *bloco)
+{
+    int *p = (int *)bloco - 2;
+    *p = 0;
+
+    int tamanho = *(p+1);
+
+    if (*(tamanho + p + 2) == 0 && tamanho + p + 2 < (int *)validAdress) {
+        printf("%d\n", *(tamanho + p + 3));
+        int novoTam = tamanho + *(tamanho + p + 3) + 16;
+
+        *(p+1) = novoTam;
+
+        
+        // if(tamanho + p >= (int *)validAdress) validAdress -= 16;
+    }
+
     return 0;
 }

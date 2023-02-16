@@ -1,27 +1,65 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
 #include "api.h"
 
-int main(int argc, char **argv)
-{
-    void *a;
-    void *b;
-    iniciaAlocador();
+int main (long int argc, char** argv) {
+  void *a,*b,*c,*d,*e;
 
-    a = firstFitMalloc(100);
-    b = firstFitMalloc(300);
-    a = firstFitMalloc(200);
-    liberaMem(b);
-    liberaMem(a);
-    imprimeMapa();
-    b = worstFitMalloc(50);
-    imprimeMapa();
-    liberaMem(b);
-    // imprimeMapa();
+  iniciaAlocador(); 
+//   imprimeMapa();
+  // 0) estado inicial
 
-    // imprimeHeap();
-    return (0);
+  a=(void *) bestFitMalloc(100);
+  b=(void *) bestFitMalloc(130);
+  c=(void *) bestFitMalloc(120);
+//   d=(void *) bestFitMalloc(110);
+  // 1) Espero ver quatro segmentos ocupados
+//   imprimeMapa();
+
+
+//   imprimeMapa();
+
+//   imprimeHeap();
+
+
+  bestliberaMem(c);
+
+//   imprimeMapa();
+
+  bestliberaMem(b);
+
+//   imprimeMapa();
+
+
+imprimeHeap();
+
+
+
+//   liberaMem(b);
+//   imprimeMapa(); 
+//   liberaMem(d);
+//   imprimeMapa(); 
+//   // 2) Espero ver quatro segmentos alternando
+//   //    ocupados e livres
+
+//   b=(void *) bestFitMalloc(50);
+//   imprimeMapa();
+//   d=(void *) bestFitMalloc(90);
+//   imprimeMapa();
+//   e=(void *) bestFitMalloc(40);
+//   imprimeMapa();
+//   // 3) Deduzam
+	
+//   liberaMem(c);
+//   imprimeMapa(); 
+//   liberaMem(a);
+//   imprimeMapa();
+//   liberaMem(b);
+//   imprimeMapa();
+//   liberaMem(d);
+//   imprimeMapa();
+//   liberaMem(e);
+//   imprimeMapa();
+   // 4) volta ao estado inicial
+
+//   finalizaAlocador();
 }

@@ -5,10 +5,15 @@
     strHash: .string "################"
     strOcupado: .string "-"
     strFree: .string "+"
-    strNull: .string "*"
+    strNull: .string "\n"
     strFim: .string "\n\n"
 .section .text
-.globl main
+.globl imprimeMapa
+.globl iniciaAlocador
+.globl bestFitMalloc
+.globl firstFitMalloc
+.globl liberaMem
+
 iniciaAlocador:
     pushq %rbp
     movq %rsp, %rbp
@@ -455,7 +460,7 @@ liberaMem:
     popq %rbp
     ret
 
-main:
+__main:
     pushq %rbp
     movq %rsp, %rbp
     subq $16, %rsp
