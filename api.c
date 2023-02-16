@@ -319,15 +319,12 @@ int bestliberaMem(void *bloco)
     *p = 0;
 
     int tamanho = *(p+1);
+    int *nextP = p + 2 + *(p+1);
 
-    if (*(tamanho + p + 2) == 0 && tamanho + p + 2 < (int *)validAdress) {
-        printf("%d\n", *(tamanho + p + 3));
-        int novoTam = tamanho + *(tamanho + p + 3) + 16;
+    if (*(nextP) == 0 && nextP < (int *)validAdress) {
+        int novoTam = tamanho + *(nextP + 1) + 16;
 
         *(p+1) = novoTam;
-
-        
-        // if(tamanho + p >= (int *)validAdress) validAdress -= 16;
     }
 
     return 0;

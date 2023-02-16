@@ -13,6 +13,7 @@
 .globl bestFitMalloc
 .globl firstFitMalloc
 .globl liberaMem
+.globl finalizaAlocador
 
 iniciaAlocador:
     pushq %rbp
@@ -486,6 +487,37 @@ liberaMem:
 
     subq $16, %rdi
     movq $0, (%rdi)
+
+    popq %rbp
+    ret
+
+# bestliberaMem:
+#     pushq %rbp
+#     movq %rsp, %rbp
+# 
+#     subq $16, %rsp
+# 
+#     subq $16, %rdi # %rdi = p
+#     movq $0, (%rdi)
+# 
+#     movq %rdi, %rax
+#     addq $8, %rax
+#     movq (%rax) = -8(%rbp) # int tamanho = *(p+1);
+# 
+# 
+# 
+# 
+# 
+#     popq %rbp
+#     ret
+
+finalizaAlocador:
+    pushq %rbp
+    movq %rsp, %rbp
+
+    movq heapBegin, %rdi
+    movq $12, %rax
+    syscall
 
     popq %rbp
     ret
