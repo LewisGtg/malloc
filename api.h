@@ -21,4 +21,6 @@ void *bestFitMalloc(int num_bytes);
 
 void *worstFitMalloc(int num_bytes);
 
+void *nextFitMalloc(int num_bytes);
+
 int liberaMem(void *bloco);

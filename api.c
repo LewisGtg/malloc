@@ -3,6 +3,7 @@
 
 void *heapBegin = NULL;
 void *validAdress = NULL;
+void *lastAddress = NULL;
 
 void iniciaAlocador()
 {
@@ -10,6 +11,7 @@ void iniciaAlocador()
     printf("Iniciando alocador\n");
     heapBegin = sbrk(0);
     validAdress = heapBegin;
+    lastAddress = heapBegin;
 }
 
 void finalizaAlocador()
@@ -64,6 +66,73 @@ void setNext(void *block, int totalAllocated)
         *(blockBegin + blockSize + 1) = totalAllocated - blockSize;
         validAdress = blockBegin + blockSize;
     }
+}
+
+void *nextFitMalloc(int num_bytes) 
+{
+    int *currentTop = sbrk(0);
+    int *p = (int *)lastAddress;
+    int m = 1;
+
+    while (num_bytes + 16 > 4096 * m)
+        m += 1;
+
+    int totalBytes = 4096 * m;
+
+    int lap = 0;
+
+    while (p < (int *)validAdress && lap == 0)
+    {
+        // Encontrou bloco livre
+        if (*p == 0 && *(p + 1) >= num_bytes)
+        {
+            *p = 1;
+
+            // Memória que ainda não foi utilizada
+            if ((int *)validAdress <= p)
+            {
+                int oldValue = *(p + 1);
+                *(p + 1) = num_bytes;
+                setNext(p, oldValue);
+            }
+
+            lastAddress = p;
+            return p + 2;
+        }
+        p += (2 + *(p + 1));
+
+        if (p >= (int *)validAdress && lap == 0)
+        {
+            p = heapBegin;
+            lap = 1;
+        }
+    }
+
+    // Nenhuma memória foi alocada ainda, ou falta memória
+    if ((int *)validAdress + num_bytes + 2 >= currentTop)
+    {
+        p = validAdress;
+
+        // Ajusta a brk
+        brk(p + totalBytes);
+        // Define as infos sobre o bloco requisitado e o bloco restante
+        *p = 1;
+        *(p + 1) = num_bytes;
+        setNext(p, totalBytes);
+    }
+    else
+    {
+        p = (int *)validAdress;
+        int oldValue = *(p + 1);
+        *p = 1;
+        *(p + 1) = num_bytes;
+        setNext(p, oldValue);
+    }
+
+    lastAddress = p;
+    return p + 2;
+
+
 }
 
 void *bestFitMalloc(int num_bytes)
